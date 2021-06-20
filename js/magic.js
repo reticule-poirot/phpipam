@@ -187,7 +187,7 @@ function randomPass() {
     var pass = "";
     var x;
     var i;
-    for(x=0; x<10; x++) {
+    for(x=0; x<15; x++) {
         i = Math.floor(Math.random() * 70);
         pass += chars.charAt(i);
     }
@@ -765,9 +765,11 @@ $(document).on('click', 'a#saveScanResults', function() {
 	showSpinner();
 	var script   = $(this).attr('data-script');
 	var subnetId = $(this).attr('data-subnetId');
-	var postData = $('form.'+script+"-form").serialize();
+	var postData = "type="+script;
 	var postData = postData+"&subnetId="+subnetId;
-	var postData = postData+"&type="+script;
+	var postData = postData+"&"+$('form.'+script+"-form").serialize();
+	var postData = postData+"&canary=true";
+
 	$.post('app/subnets/scan/subnet-scan-result.php', postData, function(data) {
         $('#subnetScanAddResult').html(data);
         //hide if success!
@@ -2221,10 +2223,11 @@ $(document).on("click", ".remove-snmp-subnet", function() {
 });
 ///add subnets to section
 $(document).on("click", "#add-subnets-to-section-snmp", function() {
-   var postData = $('form#editSubnetDetailsSNMPall').serialize();
-   var postData = postData+"&type=snmp-route-all";
-   submit_popup_data (".add-subnets-to-section-snmp-result", "app/subnets/scan/subnet-scan-result.php", postData);
-   return false;
+    var postData = "type=snmp-route-all";
+    var postData = postData+"&"+$('form#editSubnetDetailsSNMPall').serialize();
+    var postData = postData+"&canary=true";
+    submit_popup_data (".add-subnets-to-section-snmp-result", "app/subnets/scan/subnet-scan-result.php", postData);
+    return false;
 });
 
 

@@ -8,6 +8,16 @@ if(!function_exists('gettext')) {
 	function _($text) 			{ return $text; }
 }
 
+
+/**
+ * Disable php errors on output scripts (json,xml,crt,sql...)
+ */
+function disable_php_errors() {
+	# Don't corrupt json,xml,sql,png... output with php errors!
+	ini_set('display_errors', 0);
+	ini_set('display_startup_errors', 0);
+}
+
 /**
  * Supported in PHP 5 >= 5.6.0
  * A timing safe equals comparison more info here: http://blog.ircmaxell.com/2014/11/its-all-about-time.html.
@@ -186,4 +196,36 @@ function set_ui_language($default_lang = null) {
 	}
 
 	return false;
+}
+
+/**
+ * Set HTTP cookie with mandatory samesite attribute
+ * Required to support php <7.3 and modern browsers
+ *
+ * @param   string $name
+ * @param   mixed $value
+ * @param   int $lifetime
+ * @param   bool $httponly
+ * @return  void
+ */
+function setcookie_samesite($name, $value, $lifetime, $httponly=false) {
+
+	$lifetime = (int) $lifetime;
+
+	# Manually set cookie via header, php native support for samesite attribute is >=php7.3
+
+	$name = urlencode($name);
+	$value = urlencode($value);
+
+	$tz = date_default_timezone_get();
+	date_default_timezone_set('UTC');
+	$expire_date = date('r', time()+$lifetime);
+	date_default_timezone_set($tz);
+
+	$samesite = Config::ValueOf("cookie_samesite", "Lax");
+	if (!in_array($samesite, ["None", "Lax", "Secure"])) $samesite="Lax";
+
+	$httponly = ($httponly===true) ? ' HttpOnly;' : '';
+
+	header("Set-Cookie: $name=$value; expires=$expire_date; Max-Age=$lifetime; path=/; SameSite=$samesite;".$httponly);
 }

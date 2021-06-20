@@ -12,13 +12,13 @@ $db['port'] = 3306;
 /**
  * Database webhost settings
  *
- * Enable and change this setting if your MySQL database does not run on
- * localhost and you want to use the automatic database installation method
- * to create a database user for you (which by default is created @localhost)
+ * Change this setting if your MySQL database does not run on localhost
+ * and you want to use the automatic database installation method to
+ * create a database user for you (which by default is created @localhost)
  *
  * Set to the hostname or IP address of the webserver, or % to allow all
  ******************************/
-// $db['webhost'] = 'localhost';
+$db['webhost'] = '';
 
 
 /**
@@ -39,13 +39,8 @@ $db['ssl_ca']     = '/path/to/ca.crt';               // path to a file containin
 $db['ssl_capath'] = '/path/to/ca_certs';             // path to a directory containing CA certs
 $db['ssl_cipher'] = 'DHE-RSA-AES256-SHA:AES128-SHA'; // one or more SSL Ciphers
 $db['ssl_verify'] = 'true';                          // Verify Common Name (CN) of server certificate?
-
-
-/**
- * temporary table type to create slave subnets table
- * (MEMORY, InnoDB)
- ******************************/
-$db['tmptable_engine_type'] = "MEMORY";
+$db['tmptable_engine_type'] = "MEMORY";              // Temporary table type to construct complex queries (MEMORY, InnoDB)
+$db['use_cte']    = 1;                               // Use recursive CTE queries [>=MariaDB 10.2.2, >=MySQL 8.0] (0=disabled, 1=autodetect, 2=force enable)
 
 
 /**
@@ -100,6 +95,13 @@ $api_allow_unsafe = false;
  ******************************/
 $phpsessname = "phpipam";
 
+/**
+ * Cookie SameSite settings ("None", "Lax"=Default, "Strict")
+ * - "Strict" increases security
+ * - "Lax" required for SAML2
+ * - "None" requires HTTPS
+ */
+$cookie_samesite = "Lax";
 
 /**
  * Session storage - files or database
@@ -135,16 +137,6 @@ define('MCUNIQUE', "section");
  ******************************/
 $private_subpages = array();
 
-
-/**
- * Google MAPs API key for locations to display map
- *
- *  Obtain key: Go to your Google Console (https://console.developers.google.com) and enable "Google Maps JavaScript API"
- *  from overview tab, so go to Credentials tab and make an API key for your project.
- ******************************/
-$gmaps_api_key         = "";
-$gmaps_api_geocode_key = "";
-
 /**
  * proxy connection details
  ******************************/
@@ -157,9 +149,8 @@ $proxy_use_auth = false;                                  // Enable/Disable Prox
 
 /**
  * Failed access
- * message to log into webserver logs in case of failed access, for further processing by tools like Fail2Ban
- * Apache users should use : user "%u" authentication failure for "phpIPAM"
- * Nginx  users should use : user "%u" was not found in "phpIPAM"
+ * Message to log into webserver logs in case of failed access, for further processing by tools like Fail2Ban
+ * The message can contain a %u parameter which will be replaced with the login user identifier.
  ******************************/
 // $failed_access_message = '';
 

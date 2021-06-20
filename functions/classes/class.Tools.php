@@ -7,16 +7,6 @@
 class Tools extends Common_functions {
 
 	/**
-	 * (array) IP address types from Addresses object
-	 *
-	 * (default value: null)
-	 *
-	 * @var mixed
-	 * @access public
-	 */
-	public $address_types = null;
-
-	/**
 	 * CSV delimiter
 	 *
 	 * @var string
@@ -200,10 +190,13 @@ class Tools extends Common_functions {
 		$result2 = $this->search_subnets_inside ($high, $low);
 		# search inside subnets even if IP does not exist - IPv6
 		$result3 = $this->search_subnets_inside_v6 ($high, $low, $search_req);
-		# merge arrays
-		$result = array_merge($result1, $result2, $result3);
-	    # result
-	    return array_filter($result);
+		# filter results based on id
+		$results = [];
+		foreach (array_merge($result1, $result2, $result3) as $result) {
+			$results[$result->id] = $result;
+		}
+		# result
+		return $results;
 	}
 
 	/**
@@ -1043,9 +1036,9 @@ class Tools extends Common_functions {
 			$values = $this->reformat_empty_array_fields ($values, "/");
 
 			# generate content
-			if ($action=="new")			{ $subject	= "New IP address request"; }
-			elseif ($action=="accept")	{ $subject	= "IP address request accepted"; }
-			elseif ($action=="reject")	{ $subject	= "IP address request rejected"; }
+			if ($action=="new")			{ $subject	= _("New IP address request"); }
+			elseif ($action=="accept")	{ $subject	= _("IP address request accepted"); }
+			elseif ($action=="reject")	{ $subject	= _("IP address request rejected"); }
 			else						{ $this->Result->show("danger", _("Invalid request action"), true); }
 
 			// set html content
@@ -1064,13 +1057,13 @@ class Tools extends Common_functions {
 			$content[] = "</tr>";
 			}
 			}
-			$content[] = "<tr><td style='padding-top:15px;padding-bottom:3px;text-align:right;color:#ccc;'>$this->mail_font_style Sent at ".date('Y/m/d H:i')."</font></td></tr>";
+			$content[] = "<tr><td style='padding-top:15px;padding-bottom:3px;text-align:right;color:#ccc;'>$this->mail_font_style "._("Sent at")." ".date('Y/m/d H:i')."</font></td></tr>";
 			//set alt content
 			$content_plain[] = "$subject"."\r\n------------------------------\r\n";
 			foreach($values as $k=>$v) {
 			$content_plain[] = $k." => ".$v;
 			}
-			$content_plain[] = "\r\n\r\nSent at ".date('Y/m/d H:i');
+			$content_plain[] = "\r\n\r\n".("Sent at")." ".date('Y/m/d H:i');
 			$content[] = "</table>";
 
 			// set content
@@ -1093,9 +1086,9 @@ class Tools extends Common_functions {
 			//send
 			$phpipam_mail->Php_mailer->send();
 		} catch (phpmailerException $e) {
-			$this->Result->show("danger", "Mailer Error: ".$e->errorMessage(), true);
+			$this->Result->show("danger", _("Mailer Error").": ".$e->errorMessage(), true);
 		} catch (Exception $e) {
-			$this->Result->show("danger", "Mailer Error: ".$e->getMessage(), true);
+			$this->Result->show("danger", _("Mailer Error").": ".$e->getMessage(), true);
 		}
 
 		# ok
@@ -1165,7 +1158,7 @@ class Tools extends Common_functions {
 			// subnetId
 			if ($k=="subnetId")	{
 				// add title
-				$mail["s_title_1"] = "<br>Subnet details";
+				$mail["s_title_1"] = "<br>"._("Subnet details");
 
 				$subnet = $this->fetch_object("subnets", "id", $v);
 				$mail["Subnet"]  = $this->transform_address ($subnet->subnet, "dotted")."/".$subnet->mask;
@@ -1174,12 +1167,12 @@ class Tools extends Common_functions {
 			// ip_addr
 			elseif ($k=="ip_addr") {
 				// add title
-				$mail["s_title_2"] = "<br>Address details";
+				$mail["s_title_2"] = "<br>"._("Address details");
 
 				if (strlen($v)>0) {
 					$mail['IP address'] = $this->transform_address($v, "dotted");
 				} else {
-					$mail['IP address'] = "Automatic";
+					$mail['IP address'] = _("Automatic");
 				}
 			}
 			// state
@@ -1209,7 +1202,7 @@ class Tools extends Common_functions {
 			// admin comment
 			elseif ($k=="adminComment") {
 				// add title
-				$mail["s_title_3"] = "<br>Admin comment";
+				$mail["s_title_3"] = "<br>"._("Admin comment");
 
 				$mail['Admin comment'] = $v;
 			}
@@ -1411,7 +1404,7 @@ class Tools extends Common_functions {
 		# fix
 		try { $this->Database->runQuery($query); }
 		catch (Exception $e) {
-			$this->Result->show("danger", _("Update: ").$e->getMessage()."<br>query: ".$query, true);
+			$this->Result->show("danger", _("Update: ").$e->getMessage()."<br>"._("query").": ".$query, true);
 			return false;
 		}
 		return true;
@@ -1437,7 +1430,7 @@ class Tools extends Common_functions {
 		# fix
 		try { $this->Database->runQuery($query); }
 		catch (Exception $e) {
-			$this->Result->show("danger", _("Update: ").$e->getMessage()."<br>query: ".$query, true);
+			$this->Result->show("danger", _("Update: ").$e->getMessage()."<br>"._("query").": ".$query, true);
 			return false;
 		}
 		return true;
@@ -1510,7 +1503,7 @@ class Tools extends Common_functions {
 	private function get_table_indexes($table) {
 		try { return $indexes = $this->Database->getObjectsQuery("SHOW INDEX from `$table` where `Key_name` != 'PRIMARY';"); }
 		catch (Exception $e) {
-			$this->Result->show("danger", _("Invalid query for `$table` database index check : ").$e->getMessage(), true);
+			$this->Result->show("danger", _("Invalid query for")." `.$table.` "._("database index check : ").$e->getMessage(), true);
 		}
 	}
 
@@ -1583,7 +1576,7 @@ class Tools extends Common_functions {
 					return false;
 				}
 				// add warning that index was created
-				$this->Result->show("warning", _("Created index for table `$table` named `$index_name`."), false);
+				$this->Result->show("warning", _("Created index for table")." `$table` "._("named")." `$index_name`.", false);
 			}
 		}
 	}
@@ -1641,7 +1634,7 @@ class Tools extends Common_functions {
 			// Too complex: Avoid creating an index for this datatype and warn of possible poor performance.
 
 			$this->Result->show("warning",
-				_("Warning: ")._("Unable to create index for MySQL TEXT/BLOB datatypes.")."<br>".
+				_("Warning: ")._("Unable to create index for MySQL TEXT/BLOB data types.")."<br>".
 				_("Reduced performance when displaying linked addresses by ").escape_input($linked_field)." ($data_type)"."<br>".
 				_("Change custom field data type to VARCHAR and re-save to enable indexing.")
 			);
@@ -1686,7 +1679,7 @@ class Tools extends Common_functions {
 		# check
 		if ($curl['result']===false) {
 			if($print_error) {
-				$this->Result->show("danger", "Cannot fetch https://github.com/phpipam/phpipam/releases.atom : ".$curl['error_msg'], false);
+				$this->Result->show("danger", _("Cannot fetch https://github.com/phpipam/phpipam/releases.atom : ").$curl['error_msg'], false);
 			}
 			return false;
 		}
@@ -2388,7 +2381,7 @@ class Tools extends Common_functions {
 	 */
 	public function check_number_duplicates ($prefix = false, $number = false) {
     	if($prefix===false && $number===false) {
-        	$this->Result->show("danger", "Duplicate chck failed", true);
+        	$this->Result->show("danger", _("Duplicate check failed"), true);
     	}
     	else {
         	$query = "select count(*) as cnt from pstnNumbers where prefix = ? and number = ?;";
@@ -2570,16 +2563,16 @@ class Tools extends Common_functions {
 				if($User->get_module_permissions ("pstn")>=User::ACCESS_R) {
 					$html[] = "	<td class='actions' style='padding:0px;'>";
 					$links = [];
-			        $links[] = ["type"=>"header", "text"=>"Show"];
-			        $links[] = ["type"=>"link", "text"=>"View prefix", "href"=>create_link($_GET['page'], "pstn-prefixes", $option['id']), "icon"=>"eye", "visible"=>"dropdown"];
+			        $links[] = ["type"=>"header", "text"=>_("Show")];
+			        $links[] = ["type"=>"link", "text"=>_("View prefix"), "href"=>create_link($_GET['page'], "pstn-prefixes", $option['id']), "icon"=>"eye", "visible"=>"dropdown"];
 
 			        if($User->get_module_permissions ("pstn")>=User::ACCESS_RW) {
 			            $links[] = ["type"=>"divider"];
-			            $links[] = ["type"=>"header", "text"=>"Manage"];
-			            $links[] = ["type"=>"link", "text"=>"Edit prefix", "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='edit' data-id='$option[id]'", "icon"=>"pencil"];
+			            $links[] = ["type"=>"header", "text"=>_("Manage")];
+			            $links[] = ["type"=>"link", "text"=>_("Edit prefix"), "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='edit' data-id='$option[id]'", "icon"=>"pencil"];
 			        }
 			        if($User->get_module_permissions ("pstn")>=User::ACCESS_RWA) {
-			            $links[] = ["type"=>"link", "text"=>"Delete prefix", "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='delete' data-id='$option[id]'", "icon"=>"times"];
+			            $links[] = ["type"=>"link", "text"=>_("Delete prefix"), "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='delete' data-id='$option[id]'", "icon"=>"times"];
 			        }
 			        $html[] = $User->print_actions($User->user->compress_actions, $links);
 					$html[] = "	</td>";
@@ -2748,6 +2741,9 @@ class Tools extends Common_functions {
 	 * @return array
 	 */
 	public function calculate_prefix_usege ($prefix, $numbers) {
+		// fetch address types
+		$this->get_addresses_types();
+
 	    # calculate max number of hosts
 	    $details = array();
 	    $details['maxhosts'] = ($prefix->stop - $prefix->start + 1);
@@ -2780,10 +2776,11 @@ class Tools extends Common_functions {
 	 * @return array
 	 */
 	public function calculate_prefix_usage_sort_numbers ($numbers) {
+		// fetch address types
+		$this->get_addresses_types();
+
 		$count = array();
 		$count['used'] = 0;				//initial sum count
-		# fetch address types
-		$this->get_addresses_types();
 		# create array of keys with initial value of 0
 		foreach($this->address_types as $a) {
 			$count[$a['type']] = 0;
@@ -2797,43 +2794,6 @@ class Tools extends Common_functions {
 		}
 		# result
 		return $count;
-	}
-
-	/**
-	 * Returns array of address types
-	 *
-	 * @access public
-	 */
-	public function get_addresses_types () {
-		# from cache
-		if($this->address_types == null) {
-        	# fetch
-        	$types = $this->fetch_all_objects ("ipTags", "id");
-
-            # save to array
-			$types_out = array();
-			foreach($types as $t) {
-				$types_out[$t->id] = (array) $t;
-			}
-			# save to cache
-			$this->address_types = $types_out;
-		}
-	}
-
-	/**
-	 * Translates address type from index (int) to type
-	 *
-	 *	e.g.: 0 > offline
-	 *
-	 * @access public
-	 * @param mixed $index
-	 * @return array
-	 */
-	public function translate_address_type ($index) {
-		# fetch
-		$this->get_addresses_types();
-		# return
-		return $this->address_types[$index]["type"];
 	}
 
 	/**
@@ -3255,13 +3215,13 @@ class Tools extends Common_functions {
 	 */
 	public function get_customer_object_types () {
 		return [
-				"subnets"     => "Subnets",
-				"ipaddresses" => "Addresses",
-				"vlans"       => "VLAN",
-				"vrf"         => "VRF",
-				"circuits"    => "Circuits",
-				"racks"       => "Racks",
-				"routing_bgp" => "BGP Routing"
+				"subnets"     => _("Subnets"),
+				"ipaddresses" => _("Addresses"),
+				"vlans"       => _("VLAN"),
+				"vrf"         => _("VRF"),
+				"circuits"    => _("Circuits"),
+				"racks"       => _("Racks"),
+				"routing_bgp" => _("BGP Routing")
 				];
 	}
 
