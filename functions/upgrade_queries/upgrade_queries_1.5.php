@@ -69,7 +69,7 @@ $upgrade_queries["1.5.30"][] = "UPDATE `settings` set `dbversion` = '30';";
 
 // L2Domain permissions
 //
-$upgrade_queries["1.5.31"][] = 'ALTER TABLE `users` CHANGE `module_permissions` `module_permissions` varchar(255) COLLATE utf8_bin DEFAULT \'{"vlan":"1","l2dom":"1","vrf":"1","pdns":"1","circuits":"1","racks":"1","nat":"1","pstn":"1","customers":"1","locations":"1","devices":"1"}\'';
+$upgrade_queries["1.5.31"][] = 'ALTER TABLE `users` CHANGE `module_permissions` `module_permissions` varchar(255) COLLATE utf8_bin DEFAULT \'{"vlan":"1","l2dom":"1","vrf":"1","pdns":"1","circuits":"1","racks":"1","nat":"1","pstn":"1","customers":"1","locations":"1","devices":"1"}\';';
 $upgrade_queries["1.5.31"][] = "-- Clone users l2dom permissions from existing vlan permission level. MySQL5.7+";
 $upgrade_queries["1.5.31"][] = "UPDATE users SET module_permissions = JSON_SET(module_permissions,'$.l2dom', JSON_EXTRACT(module_permissions,'$.vlan')); -- IGNORE_ON_FAILURE"; // MySQL 5.7+
 
@@ -132,3 +132,56 @@ $upgrade_queries["1.5.35"][] = "ALTER TABLE `requests` ADD `mac` varchar(20) DEF
 
 $upgrade_queries["1.5.35"][] = "-- Database version bump";
 $upgrade_queries["1.5.35"][] = "UPDATE `settings` set `dbversion` = '35';";
+
+
+//
+// Vaults
+//
+$upgrade_queries["1.5.36"][] = "ALTER TABLE `settings` ADD `enableVaults` TINYINT(1)  NOT NULL  DEFAULT '1';";
+// vaults table
+$upgrade_queries["1.5.36"][] = "CREATE TABLE `vaults` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL DEFAULT '',
+  `type` enum('passwords','certificates') NOT NULL DEFAULT 'passwords',
+  `description` text,
+  `test` char(128) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+// vault items
+$upgrade_queries["1.5.36"][] = "CREATE TABLE `vaultItems` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `vaultId` int(11) unsigned NOT NULL,
+  `type` enum('password','certificate') NOT NULL DEFAULT 'password',
+  `type_certificate` enum('public','pkcs12','certificate','website') NOT NULL DEFAULT 'public',
+  `values` text,
+  PRIMARY KEY (`id`),
+  KEY `vaultId` (`vaultId`),
+  CONSTRAINT `vaultItems_ibfk_1` FOREIGN KEY (`vaultId`) REFERENCES `vaults` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$upgrade_queries["1.5.36"][] = "-- Database version bump";
+$upgrade_queries["1.5.36"][] = "UPDATE `settings` set `dbversion` = '36';";
+
+//
+// OpenStreetMap nominatim geocoding service
+//
+$upgrade_queries["1.5.37"][] = "ALTER TABLE `customers` CHANGE `lat`  `lat`  varchar(31) DEFAULT NULL;";
+$upgrade_queries["1.5.37"][] = "ALTER TABLE `customers` CHANGE `long` `long` varchar(31) DEFAULT NULL;";
+$upgrade_queries["1.5.37"][] = "ALTER TABLE `locations` CHANGE `lat`  `lat`  varchar(31) DEFAULT NULL;";
+$upgrade_queries["1.5.37"][] = "ALTER TABLE `locations` CHANGE `long` `long` varchar(31) DEFAULT NULL;";
+$upgrade_queries["1.5.37"][] = "CREATE TABLE `nominatim` (
+  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+$upgrade_queries["1.5.37"][] = "INSERT INTO `nominatim` (`id`, `url`) VALUES (1, 'https://nominatim.openstreetmap.org/search');";
+$upgrade_queries["1.5.37"][] = "CREATE TABLE `nominatim_cache` (
+  `sha256` binary(32) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `query` text NOT NULL,
+  `lat_lng` text NOT NULL,
+  PRIMARY KEY (`sha256`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$upgrade_queries["1.5.37"][] = "-- Database version bump";
+$upgrade_queries["1.5.37"][] = "UPDATE `settings` set `dbversion` = '37';";

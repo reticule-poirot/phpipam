@@ -80,6 +80,10 @@ else {
     	$subnet_old_details['location']         = @$subnet_old_temp['location'];          // inherit location
         if($User->settings->enableCustomers=="1")
         $subnet_old_details['customer_id']         = @$subnet_old_temp['customer_id'];          // inherit location
+       if($User->settings->enablePowerDNS=="1")
+       $subnet_old_details['DNSrecursive']     = @$subnet_old_temp['DNSrecursive'];      // inherit DNSrecursive
+       if($User->settings->enablePowerDNS=="1")
+       $subnet_old_details['DNSrecords']     = @$subnet_old_temp['DNSrecords'];          // inherit DNSrecords
 	}
 	# set master if it came from free space!
 	if(isset($_POST['freespaceMSID'])) {
@@ -196,7 +200,7 @@ $("input[name='subnet']").change(function() {
 				<input type="text" class="form-control input-sm input-w-200" name="subnet" placeholder="<?php print _('subnet in CIDR'); ?>" value="<?php print @$cidr; ?>">
 				<?php if (strlen($dropdown_menu)>0) { ?>
 				<div class="input-group-btn">
-					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select <span class="caret"></span></button>
+					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php print _("Select"); ?> <span class="caret"></span></button>
 					<ul class="dropdown-menu dropdown-menu-right dropdown-subnets">
 						<?php print $dropdown_menu; ?>
 					</ul>

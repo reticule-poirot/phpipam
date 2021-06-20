@@ -3,6 +3,9 @@
 # Check we have been included and not called directly
 require( dirname(__FILE__) . '/../../../functions/include-only.php' );
 
+# Don't corrupt output with php errors!
+disable_php_errors();
+
 /*
  * Discover new hosts with snmp
  *******************************/
@@ -34,9 +37,6 @@ if (sizeof($all_subnet_hosts)>0) {
 # set selected address fields array
 $selected_ip_fields = $User->settings->IPfilter;
 $selected_ip_fields = explode(";", $selected_ip_fields);
-
-// no errors
-error_reporting(E_ERROR);
 
 # fetch devices that use get_routing_table query
 $devices_used = $Tools->fetch_multiple_objects ("devices", "snmp_queries", "%get_arp_table%", "id", true, true);
@@ -135,6 +135,7 @@ else {
 
 	//form
 	print "<form name='scan-snmp-arp-form' class='scan-snmp-arp-form'>";
+	print "<input type='hidden' name='csrf_cookie' value='$csrf'>";
 	print "<table class='table table-striped table-top table-condensed'>";
 
 	// titles
@@ -171,7 +172,6 @@ else {
     		print "	<input type='text' class='form-control input-sm' name='description$m'>";
     		print "	<input type='hidden' name='ip$m' value='$ip[ip]'>";
     		print "	<input type='hidden' name='device$m' value='$deviceid'>";
-    		print " <input type='hidden' name='csrf_cookie' value='$csrf'>";
     		print "</td>";
     		// mac
     		print "<td>";
